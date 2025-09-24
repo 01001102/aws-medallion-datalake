@@ -1,0 +1,12 @@
+environment     = "dev"
+aws_region      = "us-east-1"
+project_name    = "medallion-pipeline"
+dev_account_id  = "111111111111"
+prod_account_id = "222222222222"
+
+api_urls = [
+  "https://jsonplaceholder.typicode.com/posts",
+  "https://jsonplaceholder.typicode.com/users", 
+  "https://jsonplaceholder.typicode.com/albums",
+  "https://jsonplaceholder.typicode.com/photos"
+]
