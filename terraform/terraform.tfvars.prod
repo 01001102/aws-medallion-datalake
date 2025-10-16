@@ -1,12 +1,27 @@
-environment     = "prod"
-aws_region      = "us-east-1"
-project_name    = "medallion-pipeline"
-dev_account_id  = "111111111111"
-prod_account_id = "222222222222"
+# Configurações para ambiente PROD
+environment = "prod"
+aws_region  = "us-east-1"
 
-api_urls = [
-  "https://api1.example.com/data",
-  "https://api2.example.com/data",
-  "https://api3.example.com/data",
-  "https://api4.example.com/data"
-]
+# Configurações gerais
+project_name = "medallion-pipeline"
+
+# Tags comuns
+common_tags = {
+  Project     = "medallion-pipeline"
+  Environment = "prod"
+  ManagedBy   = "Terraform"
+  Owner       = "DataEngineering"
+}
+
+# Configurações Digit
+digit_cliente_nome      = "planoeplano"
+digit_chave_secreta     = "KeyPlano&Plano"
+digit_schedule_enabled  = true
+digit_execution_timeout = 90  # Mais tempo para PROD
+digit_worker_type       = "G.2X"  # Workers maiores para PROD
+digit_number_of_workers = 3
+
+# Configurações Agilean (mantidas separadas)
+agilean_schedule_enabled = true
+agilean_execution_day    = "SUN"  # Domingo
+agilean_execution_hour   = 2      # 02:00

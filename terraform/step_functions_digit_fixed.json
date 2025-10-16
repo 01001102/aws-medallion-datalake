@@ -1,0 +1,88 @@
+{
+  "Comment": "Pipeline Digit com Tratamento de Erro",
+  "StartAt": "BronzeJob",
+  "States": {
+    "BronzeJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "medallion-pipeline-dev-bronze-digit",
+        "Arguments": {
+          "--ENDPOINT_TYPE": "horas_funcao",
+          "--BRONZE_BUCKET": "medallion-pipeline-dev-bronze-65f61163"
+        }
+      },
+      "Next": "SilverJob",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ErrorNotification",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "SilverJob": {
+      "Type": "Task", 
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "medallion-pipeline-dev-silver-digit",
+        "Arguments": {
+          "--BRONZE_BUCKET": "medallion-pipeline-dev-bronze-65f61163",
+          "--SILVER_BUCKET": "medallion-pipeline-dev-silver-65f61163"
+        }
+      },
+      "Next": "GoldJob",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ErrorNotification",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "GoldJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync", 
+      "Parameters": {
+        "JobName": "medallion-pipeline-dev-gold-digit",
+        "Arguments": {
+          "--SILVER_BUCKET": "medallion-pipeline-dev-silver-65f61163",
+          "--GOLD_BUCKET": "medallion-pipeline-dev-gold-65f61163"
+        }
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "ErrorNotification",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Pass",
+      "Result": "Pipeline executado com sucesso!",
+      "End": true
+    },
+    "ErrorNotification": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "digit-pipeline-error-handler",
+        "Payload": {
+          "Error.$": "$.error.Error",
+          "Cause.$": "$.error.Cause", 
+          "StateName.$": "$$.State.Name",
+          "ExecutionName.$": "$$.Execution.Name",
+          "Timestamp.$": "$$.State.EnteredTime"
+        }
+      },
+      "Next": "FailPipeline"
+    },
+    "FailPipeline": {
+      "Type": "Fail",
+      "Error": "PipelineError",
+      "Cause": "Pipeline falhou - notificação enviada"
+    }
+  }
+}

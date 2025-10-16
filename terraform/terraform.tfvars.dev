@@ -1,12 +1,19 @@
-environment     = "dev"
-aws_region      = "us-east-1"
-project_name    = "medallion-pipeline"
-dev_account_id  = "111111111111"
-prod_account_id = "222222222222"
+# Configurações para ambiente DEV
+environment = "dev"
+project_name = "medallion-pipeline"
 
-api_urls = [
-  "https://jsonplaceholder.typicode.com/posts",
-  "https://jsonplaceholder.typicode.com/users", 
-  "https://jsonplaceholder.typicode.com/albums",
-  "https://jsonplaceholder.typicode.com/photos"
-]
+# AWS Accounts
+dev_account_id = "123456789012"
+prod_account_id = "987654321098"
+
+# APIs Agilean
+agilean_user = "user@example.com"
+agilean_password = "password123"
+
+# Tags comuns
+common_tags = {
+  Project     = "medallion-pipeline"
+  Environment = "dev"
+  ManagedBy   = "Terraform"
+  Owner       = "DataEngineering"
+}

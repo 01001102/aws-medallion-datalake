@@ -48,6 +48,9 @@ resource "aws_athena_data_catalog" "iceberg_catalog" {
   type        = "GLUE"
 
   parameters = {
-    "metadata-function" = "glue"
+    "catalog-id" = data.aws_caller_identity.current.account_id
   }
 }
+
+# Data source para obter account ID
+data "aws_caller_identity" "current" {}

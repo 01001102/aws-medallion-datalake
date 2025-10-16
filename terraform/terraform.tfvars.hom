@@ -1,12 +1,16 @@
-environment     = "hom"
+# Configuração para ambiente HOM
 aws_region      = "us-east-1"
 project_name    = "medallion-pipeline"
-dev_account_id  = "111111111111"
-prod_account_id = "222222222222"
+environment     = "hom"
+dev_account_id  = "521934831836"  # Mesma conta para este exemplo
+prod_account_id = "521934831836"  # Mesma conta para este exemplo
 
 api_urls = [
-  "https://api1-hom.example.com/data",
-  "https://api2-hom.example.com/data",
-  "https://api3-hom.example.com/data",
-  "https://api4-hom.example.com/data"
+  "https://jsonplaceholder.typicode.com/posts",
+  "https://jsonplaceholder.typicode.com/users", 
+  "https://jsonplaceholder.typicode.com/albums",
+  "https://jsonplaceholder.typicode.com/photos"
 ]
+
+agilean_user     = "integracaoagilean@planoeplano.com.br"
+agilean_password = "@2Plano2024"

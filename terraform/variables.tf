@@ -39,3 +39,21 @@ variable "api_urls" {
     "https://api4.example.com/data"
   ]
 }
+
+variable "agilean_user" {
+  description = "Usuário para autenticação na API Agilean"
+  type        = string
+  sensitive   = true
+}
+
+variable "agilean_password" {
+  description = "Senha para autenticação na API Agilean"
+  type        = string
+  sensitive   = true
+}
+
+variable "common_tags" {
+  description = "Tags comuns para todos os recursos"
+  type        = map(string)
+  default     = {}
+}

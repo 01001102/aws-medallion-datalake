@@ -48,15 +48,37 @@ terraform apply -var-file="terraform.tfvars.prod"
 - [Fluxo da Arquitetura](ARCHITECTURE_FLOW.md) - Documentação técnica completa
 - [Diagrama](arquitetura-medallion.drawio) - Representação visual da arquitetura (abrir com extensão Draw.io)
 
+![alt text](image.png)
+
 ## Componentes
 
-- **12 Jobs Glue** (4 por camada)
+- **13 Jobs Glue** (4 genéricos + 1 Agilean por camada)
 - **3 Buckets S3** (Bronze/Silver/Gold)
 - **Step Functions** para orquestração
-- **EventBridge** para agendamento
+- **EventBridge** para agendamento (diário + semanal Agilean)
 - **DynamoDB** para controle de watermark
 - **Athena** para analytics
 - **Tabelas Iceberg** para queries otimizadas
+
+## API Agilean
+
+### Características Especiais
+- **Autenticação Bearer Token**: Login obrigatório antes de acessar endpoints
+- **Execução Semanal**: Domingos às 02:00 (fora do horário comercial)
+- **Alto Custo de Processamento**: Uso otimizado conforme recomendação
+- **Dados Hierárquicos**: Projetos → Baseline/Orçamento → Cenários
+
+### Endpoints Implementados
+1. `/api/v1/users/login` - Autenticação
+2. `/api/v1/projects` - Lista de projetos
+3. `/api/v1/portal/long/budget-baseline-link-info/{projectId}` - Informações de baseline
+4. `/api/v1/portal/long/scenario-value-table/{projectId}` - Dados do longo prazo
+
+### Teste Local
+```bash
+cd scripts
+python test_agilean_api.py <usuario> <senha>
+```
 
 ## Governança e Tags
 
@@ -75,13 +97,33 @@ Exemplo: medallion-pipeline-prod-bronze-a1b2c3
 ```
 
 
+## Estrutura do Projeto
+
+```
+├── scripts/                 # Scripts Glue (Bronze, Silver, Gold)
+│   ├── error_handler/      # Lambda de tratamento de erro
+│   ├── bronze_digit_daily.py
+│   ├── silver_digit_clean.py
+│   └── gold_digit_fixed.py
+├── terraform/              # Infraestrutura como código
+│   ├── *.tf               # Recursos AWS
+│   └── terraform.tfvars.*  # Variáveis por ambiente
+├── sql/                    # Queries Athena
+├── step-functions/         # Definições Step Functions
+└── docs/                   # Documentação técnica
+```
+
+## Deploy
+
+Ver [DEPLOY.md](DEPLOY.md) para instruções detalhadas.
+
 ## Segurança
 
 - Account IDs são exemplos genéricos
 - URLs de APIs são placeholders
-- Nenhuma credencial real incluída
+- Credenciais via AWS Secrets Manager
 - Configurações sensíveis em .gitignore
 
 ## Autor
 
-Desenvolvido por Ivan de França
+Desenvolvido por STIT Cloud 

@@ -1,0 +1,131 @@
+{
+  "Comment": "Step Functions para carga histórica Digit - 12 meses sequenciais",
+  "StartAt": "InitializeHistoricalLoad",
+  "States": {
+    "InitializeHistoricalLoad": {
+      "Type": "Pass",
+      "Result": {
+        "periods": [
+          {"month": 10, "year": 2024},
+          {"month": 11, "year": 2024},
+          {"month": 12, "year": 2024},
+          {"month": 1, "year": 2025},
+          {"month": 2, "year": 2025},
+          {"month": 3, "year": 2025},
+          {"month": 4, "year": 2025},
+          {"month": 5, "year": 2025},
+          {"month": 6, "year": 2025},
+          {"month": 7, "year": 2025},
+          {"month": 8, "year": 2025},
+          {"month": 9, "year": 2025},
+          {"month": 10, "year": 2025}
+        ],
+        "currentIndex": 0
+      },
+      "Next": "ProcessMonth"
+    },
+    
+    "ProcessMonth": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "medallion-pipeline-dev-watermark",
+        "Item": {
+          "api_name": {"S": "digit"},
+          "current_month": {"N.$": "States.Format('{}', $.periods[$.currentIndex].month)"},
+          "current_year": {"N.$": "States.Format('{}', $.periods[$.currentIndex].year)"},
+          "status": {"S": "loading"},
+          "total_months": {"N": "13"},
+          "last_execution": {"S.$": "$$.State.EnteredTime"}
+        }
+      },
+      "Next": "ExecuteBronzeJob"
+    },
+    
+    "ExecuteBronzeJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "medallion-pipeline-dev-bronze-digit",
+        "Arguments": {
+          "--BRONZE_BUCKET": "medallion-pipeline-dev-bronze-65f61163",
+          "--WATERMARK_TABLE": "medallion-pipeline-dev-watermark"
+        }
+      },
+      "ResultPath": "$.jobResult",
+      "Next": "CheckJobSuccess",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "JobFailure",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    
+    "CheckJobSuccess": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.jobResult.JobRunState",
+          "StringEquals": "SUCCEEDED",
+          "Next": "IncrementMonth"
+        }
+      ],
+      "Default": "JobFailure"
+    },
+    
+    "IncrementMonth": {
+      "Type": "Pass",
+      "Parameters": {
+        "periods.$": "$.periods",
+        "currentIndex.$": "States.MathAdd($.currentIndex, 1)"
+      },
+      "Next": "CheckMoreMonths"
+    },
+    
+    "CheckMoreMonths": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.currentIndex",
+          "NumericLessThan": 13,
+          "Next": "ProcessMonth"
+        }
+      ],
+      "Default": "MarkCompleted"
+    },
+    
+    "MarkCompleted": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "medallion-pipeline-dev-watermark",
+        "Item": {
+          "api_name": {"S": "digit"},
+          "current_month": {"N": "10"},
+          "current_year": {"N": "2025"},
+          "status": {"S": "completed"},
+          "total_months": {"N": "13"},
+          "last_execution": {"S.$": "$$.State.EnteredTime"}
+        }
+      },
+      "Next": "HistoricalLoadSuccess"
+    },
+    
+    "HistoricalLoadSuccess": {
+      "Type": "Pass",
+      "Result": {
+        "Status": "SUCCESS",
+        "Message": "Carga histórica Out/2024 a Out/2025 concluída (13 meses)"
+      },
+      "End": true
+    },
+    
+    "JobFailure": {
+      "Type": "Fail",
+      "Cause": "Job Glue falhou durante carga histórica",
+      "Error": "HistoricalLoadError"
+    }
+  }
+}

@@ -47,9 +47,27 @@ resource "aws_iam_role_policy" "glue_policy" {
           "logs:*",
           "dynamodb:GetItem",
           "dynamodb:PutItem",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "secretsmanager:GetSecretValue",
+          "athena:*",
+          "lakeformation:GetDataAccess",
+          "lakeformation:GrantPermissions",
+          "lakeformation:BatchGrantPermissions",
+          "lakeformation:RevokePermissions",
+          "lakeformation:BatchRevokePermissions",
+          "lakeformation:ListPermissions",
+          "glue:CreateDatabase",
+          "glue:GetDatabase",
+          "glue:CreateTable",
+          "glue:GetTable",
+          "glue:UpdateTable",
+          "glue:DeleteTable",
+          "glue:GetPartitions"
         ]
-        Resource = "*"
+        Resource = [
+          "*",
+          aws_secretsmanager_secret.agilean_credentials.arn
+        ]
       }
     ]
   })
@@ -90,7 +108,10 @@ resource "aws_iam_role_policy" "step_function_policy" {
         Action = [
           "glue:StartJobRun",
           "glue:GetJobRun",
-          "glue:BatchStopJobRun"
+          "glue:BatchStopJobRun",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
         ]
         Resource = "*"
       }
@@ -128,7 +149,7 @@ resource "aws_iam_role_policy" "eventbridge_policy" {
         Action = [
           "states:StartExecution"
         ]
-        Resource = aws_sfn_state_machine.medallion_pipeline.arn
+        Resource = aws_sfn_state_machine.digit_pipeline.arn
       }
     ]
   })
